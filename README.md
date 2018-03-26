@@ -11,7 +11,9 @@ A desktop application for logging details of work.
 
 ### 软件截图
 
-![v0.2.1](http://omvy9d3lc.bkt.clouddn.com/blog/180326/IJj4LCm18a.png?imageslim)
+![mark](http://omvy9d3lc.bkt.clouddn.com/blog/180326/b82h50iJmf.png?imageslim)
+
+![mark](http://omvy9d3lc.bkt.clouddn.com/blog/180326/4DhhmfBAjJ.png?imageslim)
 
 
 ### 版权说明
