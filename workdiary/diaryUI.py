@@ -57,7 +57,7 @@ class DiaryRoot(Tk):
         ttk.Combobox(init_frame,textvariable=self.category,values=['工作','生活','学习'],width=4,state='readonly').grid(row=1,column=0,padx=5,pady=5)
 
         # 日期录入
-        Label(init_frame,text='日期（不选则默认当天）').grid(row=0,column=1,padx=5,pady=5,columnspan=2)  
+        Label(init_frame,text='日期（当天添加记录可不选）').grid(row=0,column=1,padx=5,pady=5,columnspan=2)  
         self.date = StringVar()
         #self.date.set()
         Label(init_frame, textvariable=self.date,width=11,bd=3,relief=SUNKEN).grid(row=1,column=1)
@@ -142,7 +142,7 @@ class DiaryRoot(Tk):
         for result in results_temp:
             self.results.append(result)
             
-        frame_text = category
+        frame_text = '查询记录'
         
         query_window = QueryRoot(self.results,frame_text,state=DISABLED)
                     
@@ -192,7 +192,6 @@ class DiaryRoot(Tk):
         self.destroy()
         
         
-        
     def new_frame(self):
         new_frame = Frame(self)
         new_frame.grid(row=1,column=1)
@@ -200,7 +199,6 @@ class DiaryRoot(Tk):
         # 显示近两日记录按钮
         Button(new_frame,text='显示近两日记录',command=self.show_new_records,width=30).grid(padx=5,pady=5)
 
-        
         
     def get_localtime(self):
         '''获得当地时间'''
@@ -233,7 +231,7 @@ class DiaryRoot(Tk):
                 for result in results_temp:
                     results.append(result)
                     
-        frame_text = '近两日记录可修改'
+        frame_text = '近两日记录'
         query_window = QueryRoot(results,frame_text)
       
 
@@ -282,38 +280,45 @@ class DetailRoot(Toplevel):
 class QueryRoot(Toplevel):
     def __init__(self,results,frame_text,state=NORMAL):
         super().__init__()
-        self.title('查询结果')
+        self.title(frame_text)
         self.results = results
-        self.frame_text = frame_text
         self.state = state
         self.query_record()
 
         
     def query_record(self):
         '''查询记录'''
-        results_frame = LabelFrame(self,text=self.frame_text)
-        results_frame.pack(padx=10,pady=10)
         
         width_list = [0,10,10,30,10]
+        bar = Scrollbar(self,takefocus=False)
+        bar.pack(side=RIGHT,fill=Y)
+        # bg选白烟色，最接近默认组件的颜色
+        self.text = Text(self,bg='WhiteSmoke',height=12,width=85,yscrollcommand=bar.set)
+        self.text.pack(side=RIGHT,fill=X)
+        bar['command'] = self.text.yview
         
         for i in range(len(self.results)):
-            if i != 0:
-                show_detail = Button(results_frame,text='查看详情')
-                show_detail.grid(row=i,column=4)
-                show_detail.bind("<ButtonRelease-1>",self.get_detail)
-                modify_button = Button(results_frame,text='修改记录',state=self.state)
-                modify_button.grid(row=i,column=5)
-                modify_button.bind('<ButtonRelease-1>',self.modify_record)
-
             for j in range(1,len(self.results[i])-1):
                 entry = StringVar()
                 entry.set(self.results[i][j])
-                Label(results_frame, textvariable=entry,width=width_list[j],bd=3,relief=SUNKEN,justify=CENTER).grid(row=i,column=j-1,padx=5,pady=5)                
+                label = Label(self.text, textvariable=entry,width=width_list[j],bd=3,relief=SUNKEN,justify=CENTER)
+                self.text.window_create(INSERT,window=label)
+            if i == 0:
+                self.text.insert(END,'\n')
+            else:
+                show_detail = Button(self.text,text='查看详情')
+                show_detail.bind("<ButtonRelease-1>",self.get_detail)
+                self.text.window_create(INSERT,window=show_detail)
+                modify_button = Button(self.text,text='修改记录',state=self.state)
+                self.text.window_create(INSERT,window=modify_button)
+                if self.state == NORMAL:
+                    modify_button.bind('<ButtonRelease-1>',self.modify_record)
+        self.text['state'] = DISABLED                
 
     
     def get_detail(self,event):
         '''建立一个已排版的detail'''
-        row = event.widget.grid_info()["row"]
+        row = int(self.text.index(event.widget)[0]) - 1
         
         self.detail = '分类：' + self.results[row][1] + \
                         '\n日期：'+self.results[row][2] + \
@@ -324,7 +329,7 @@ class QueryRoot(Toplevel):
 
 
     def modify_record(self,event):
-        row = event.widget.grid_info()["row"]
+        row = int(self.text.index(event.widget)[0]) - 1
         modify_root = ModifyRoot(self.results[row])
         
 
