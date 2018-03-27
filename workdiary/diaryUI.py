@@ -136,15 +136,15 @@ class DiaryRoot(Tk):
         content = '%' + content + '%'
         issignif = '%' + issignif + '%'
         detail = '%' + detail + '%'
+        date_list = [date,]
 
-        results_temp = self.record.query_record(category,date,content,issignif,detail)
-        self.results = [('ID','分类','日期','内容','是否重要','点击查看详情'),]
-        for result in results_temp:
-            self.results.append(result)
-            
+        if category == '':
+            category_list = ['工作','生活','学习']
+        else:
+            category_list = [category,]
+         
         frame_text = '查询记录'
-        
-        query_window = QueryRoot(self.results,frame_text,state=DISABLED)
+        self.query_results(frame_text,category_list,date_list,content,issignif,detail,state=DISABLED)
                     
                     
     def clear_all(self):
@@ -223,7 +223,13 @@ class DiaryRoot(Tk):
         content = '%%'
         issignif = '%%'
         detail = '%%'
+
+        frame_text = '近两日记录'
+        self.query_results(frame_text,category_list,date_list,content,issignif,detail)
+
         
+    def query_results(self,frame_text,category_list,date_list,content,issignif,detail,state=NORMAL):
+        '''执行查询记录的方法'''
         results = [('ID','分类','日期','内容','是否重要','点击查看详情'),]
         for category in category_list:
             for date in date_list:
@@ -231,8 +237,7 @@ class DiaryRoot(Tk):
                 for result in results_temp:
                     results.append(result)
                     
-        frame_text = '近两日记录'
-        query_window = QueryRoot(results,frame_text)
+        query_window = QueryRoot(results,frame_text,state=state)
       
 
 
@@ -284,6 +289,7 @@ class QueryRoot(Toplevel):
         self.results = results
         self.state = state
         self.query_record()
+        self.resizable(False,True)
 
         
     def query_record(self):
@@ -293,7 +299,7 @@ class QueryRoot(Toplevel):
         bar = Scrollbar(self,takefocus=False)
         bar.pack(side=RIGHT,fill=Y)
         # bg选白烟色，最接近默认组件的颜色
-        self.text = Text(self,bg='WhiteSmoke',height=12,width=85,yscrollcommand=bar.set)
+        self.text = Text(self,bg='WhiteSmoke',height=50,width=85,yscrollcommand=bar.set)
         self.text.pack(side=RIGHT,fill=X)
         bar['command'] = self.text.yview
         

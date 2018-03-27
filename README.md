@@ -15,6 +15,13 @@ A desktop application for logging details of work.
 
 ![mark](http://omvy9d3lc.bkt.clouddn.com/blog/180326/4DhhmfBAjJ.png?imageslim)
 
+### 下一步
+
+ - 界面美化
+ - 增加待办事项
+ - 增加导出功能
+ - 增加用户日志
+
 
 ### 版权说明
 

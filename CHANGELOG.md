@@ -3,6 +3,10 @@
 
 ## [Unreleased]
 ### Added
+- 修改记录后查询记录弹窗实时更新
+
+## [0.3.1] - 2018-03-27
+### Added
 - 可以不选择分类就查询
 
 ## [0.2.1] - 2018-03-26
@@ -18,5 +22,6 @@
 ## 0.1.1 - 2018-03-21
 - 初始版本
 
-[Unreleased]: https://github.com/WolfWW/python-work-diary/compare/v0.2.1...HEAD
+[Unreleased]: https://github.com/WolfWW/python-work-diary/compare/v0.3.1...HEAD
+[0.3.1]: https://github.com/WolfWW/python-work-diary/compare/v0.2.1...v0.3.1
 [0.2.1]: https://github.com/WolfWW/python-work-diary/compare/v0.1.1...v0.2.1
