@@ -238,6 +238,10 @@ class DiaryRoot(Tk):
                     results.append(result)
                     
         query_window = QueryRoot(results,frame_text,state=state)
+        if frame_text == '近两日记录':
+            self.wait_window(query_window)
+            if query_window.modified == 1:
+                self.show_new_records()
       
 
 
@@ -337,6 +341,11 @@ class QueryRoot(Toplevel):
     def modify_record(self,event):
         row = int(self.text.index(event.widget)[0]) - 1
         modify_root = ModifyRoot(self.results[row])
+        self.wait_window(modify_root)
+        self.modified = 0
+        if modify_root.modified == 1:
+            self.modified = 1
+            self.destroy()
         
 
 class ModifyRoot(Toplevel):
@@ -350,7 +359,7 @@ class ModifyRoot(Toplevel):
         self.record = main.Record(self.database)
         self.results = results
         self.detail = results[5]
-        self.id = int(results[0])
+        self.modified = 0
         self.frame()
 
     def frame(self):
@@ -424,10 +433,13 @@ class ModifyRoot(Toplevel):
         '''保存记录'''
         category,date,content,issignif,detail = self.get_data()
         modify_category = 0
-        if category != self.results[1]:
+        old_category = self.results[1]
+        new_category = category
+        if old_category != new_category:
             modify_category = 1
         
-        self.record.modify_record(self.id,category,date,content,issignif,detail,modify_category)
+        self.record.modify_record(self.results[0],old_category,new_category,date,content,issignif,detail,modify_category)
+        self.modified = 1
         self.quit()
 
         

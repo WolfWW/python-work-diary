@@ -57,17 +57,17 @@ class Record(object):
         return results
         
         
-    def modify_record(self,id,category,date,content,signif,detail,modify_category):
+    def modify_record(self,id,old_category,new_category,date,content,signif,detail,modify_category):
         '''修改记录'''
         if modify_category == 1:
-            self.del_record(id,category)
-            self.new_record(category,date,content,signif,detail)
+            self.del_record(id,old_category)
+            self.new_record(new_category,date,content,signif,detail)
         else:
-            if category == '工作':
+            if old_category == '工作':
                 self.cur.execute("update work set date=?,content=?,issignificant=?,detail=? where id=?",(date,content,signif,detail,id))
-            elif category == '生活':
+            elif old_category == '生活':
                 self.cur.execute("update life set date=?,content=?,issignificant=?,detail=? where id=?",(date,content,signif,detail,id))
-            elif category == '学习':
+            elif old_category == '学习':
                 self.cur.execute("update learn set date=?,content=?,issignificant=?,detail=? where id=?",(date,content,signif,detail,id))
         self.con.commit()
         
