@@ -292,6 +292,7 @@ class QueryRoot(Toplevel):
         self.title(frame_text)
         self.results = results
         self.state = state
+        self.modified = 0
         self.query_record()
         self.resizable(False,True)
 
