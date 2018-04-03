@@ -3,8 +3,20 @@
 
 ## [Unreleased]
 ### Added
-- 软件运行日志
 - 导出为Excel
+
+## [0.4.2] - 2018-04-03
+### Added
+- 增加运行日志和错误日志
+- 清空表和初始化要求确认
+### Changed
+- 数据库文件移到代码文件夹
+### Fixed
+- 如果没选择表就点击清空表，会弹出提示
+
+## [0.3.3] - 2018-03-28
+### Fixed
+- QueryRoot类中忘记定义modified
 
 ## [0.3.2] - 2018-03-28
 ### Fixed
@@ -28,7 +40,9 @@
 ## 0.1.1 - 2018-03-21
 - 初始版本
 
-[Unreleased]: https://github.com/WolfWW/python-work-diary/compare/v0.3.2...HEAD
+[Unreleased]: https://github.com/WolfWW/python-work-diary/compare/v0.4.2...HEAD
+[0.4.2]: https://github.com/WolfWW/python-work-diary/compare/v0.3.3...v0.4.2
+[0.3.3]: https://github.com/WolfWW/python-work-diary/compare/v0.3.2...v0.3.3
 [0.3.2]: https://github.com/WolfWW/python-work-diary/compare/v0.3.1...v0.3.2
 [0.3.1]: https://github.com/WolfWW/python-work-diary/compare/v0.2.1...v0.3.1
 [0.2.1]: https://github.com/WolfWW/python-work-diary/compare/v0.1.1...v0.2.1

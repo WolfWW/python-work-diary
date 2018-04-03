@@ -12,10 +12,9 @@
 6.录入时可选择是否标记为重要工作
 7.软件运行日志记录
 8.可以进行用户设置，包括开机自启、字体等
+'''
 
-TODO：
-1.修改记录后查询记录弹窗实时更新
-
+'''
 日期选择插件来源：https://github.com/moshekaplan/tkinter_components
 '''
 
@@ -25,6 +24,10 @@ import datetime
 import hashlib
 from tkinter import *
 from tkinter import ttk
+from tkinter import messagebox
+
+import logging
+import logging.handlers
 
 # 日期选择
 from TtkCalendar import ttkcalendar
@@ -34,11 +37,42 @@ from TtkCalendar import CalendarDialog
 import main
 
 
+LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
+ERROR_FORMAT = "%(asctime)s - %(levelname)s - %(filename)s[:%(lineno)d] - %(message)s"
+DATE_FORMAT = "%Y-%m-%d %H:%M:%S"
+INFO_FILE = "./info.log"
+ERROR_FILE = "./error.log"
+INFO_LEVEL = logging.DEBUG
+ERROR_LEVEL = logging.ERROR 
+
+logger = logging.getLogger(__name__)
+logger.setLevel(INFO_LEVEL)
+
+info_handler = logging.handlers.TimedRotatingFileHandler(INFO_FILE,when='D',interval=1,backupCount=3)
+info_formatter = logging.Formatter(fmt=LOG_FORMAT,datefmt=DATE_FORMAT)
+info_handler.setFormatter(info_formatter)
+
+error_handler = logging.FileHandler(ERROR_FILE)
+error_formatter = logging.Formatter(fmt=ERROR_FORMAT,datefmt=DATE_FORMAT)
+error_handler.setFormatter(error_formatter)
+error_handler.setLevel(ERROR_LEVEL)
+
+logger.addHandler(info_handler)
+logger.addHandler(error_handler)
+
+def log_info(msg):
+    logger.info(msg)
+
+def log_error(msg):
+    logger.error(msg,stack_info=True,exc_info=True)
+
+
+
 class DiaryRoot(Tk):
     def __init__(self):
         super().__init__()
         self.title('Python Workdiary')
-        self.database = 'd:/workdiary.db'
+        self.database = './workdiary.db'
         self.record = main.Record(self.database)
         self.detail = ''                         # 详细内容
         self.init_frame()
@@ -125,7 +159,18 @@ class DiaryRoot(Tk):
         if date == '':
             date = str(self.get_localtime())[:10]
             
-        self.record.new_record(category,date,content,issignif,detail)
+        try:
+            self.record.new_record(category,date,content,issignif,detail)
+            log_info("成功在【%s】添加一条记录，主题'%s'\n" % (category,content))
+        except Exception:
+            log_error("【添加记录】过程出现错误：\n\
+                分类：%s\n\
+                日期：%s\n\
+                主题：%s\n\
+                重要否：%s\n\
+                详情：%s\n" % \
+                (category,date,content,issignif,detail))
+            messagebox.showerror("ERROR","发生错误")
         
         
     def query_record(self):
@@ -144,7 +189,18 @@ class DiaryRoot(Tk):
             category_list = [category,]
          
         frame_text = '查询记录'
-        self.query_results(frame_text,category_list,date_list,content,issignif,detail,state=DISABLED)
+        try:
+            self.query_results(frame_text,category_list,date_list,content,issignif,detail,state=DISABLED)
+            log_info("【执行查询】记录命令：\n\
+                分类：%s\n\
+                日期：%s\n\
+                主题：%s\n\
+                重要否：%s\n\
+                详情：%s\n" % \
+                (category_list,date_list,content,issignif,detail))
+        except Exception:
+            log_error("【查询记录】过程出现错误！")
+            messagebox.showerror("ERROR","发生错误")
                     
                     
     def clear_all(self):
@@ -176,15 +232,30 @@ class DiaryRoot(Tk):
         
     def clear_table(self,table):
         '''清空所选表'''
-        self.record.clear_table(table)
+        if table == "":
+            messagebox.showwarning("WARNING","请选择要清空的表")
+        else:
+            if messagebox.askokcancel("清空表","确定要清空%s表吗？"%table):
+                try:
+                    self.record.clear_table(table)
+                    log_info("【清空-%s】表！" % table)
+                except Exception:
+                    log_error("【清空-%s】出现错误！" % table)
+                    messagebox.showerror("ERROR","发生错误")
         
         
     def init_sql(self):
         '''重建并初始化数据库'''
-        self.record.disconnect()
-        os.unlink(self.database)
-        self.record = main.Record(self.database)
-        self.record.init_sql()
+        if messagebox.askokcancel("初始化","初始化会删除所有记录!\n确定要初始化数据库吗？"):
+            try:
+                self.record.disconnect()
+                os.unlink(self.database)
+                self.record = main.Record(self.database)
+                self.record.init_sql()
+                log_info("执行【数据库初始化】命令！")
+            except Exception:
+                log_error("【初始化错误】")
+                messagebox.showerror("ERROR","发生错误")
 
         
     def quit(self):
@@ -225,7 +296,12 @@ class DiaryRoot(Tk):
         detail = '%%'
 
         frame_text = '近两日记录'
-        self.query_results(frame_text,category_list,date_list,content,issignif,detail)
+        try:
+            self.query_results(frame_text,category_list,date_list,content,issignif,detail)
+            log_info("执行【查询近两日】命令！")
+        except Exception:
+            log_error("【查询近两日】出错！")
+            messagebox.showerror("ERROR","发生错误")
 
         
     def query_results(self,frame_text,category_list,date_list,content,issignif,detail,state=NORMAL):
@@ -356,7 +432,7 @@ class ModifyRoot(Toplevel):
     def __init__(self,results):
         super().__init__()
         self.title('修改记录页')
-        self.database = 'd:/workdiary.db'
+        self.database = './workdiary.db'
         self.record = main.Record(self.database)
         self.results = results
         self.detail = results[5]
@@ -439,7 +515,15 @@ class ModifyRoot(Toplevel):
         if old_category != new_category:
             modify_category = 1
         
-        self.record.modify_record(self.results[0],old_category,new_category,date,content,issignif,detail,modify_category)
+        try:
+            self.record.modify_record(self.results[0],old_category,new_category,date,content,issignif,detail,modify_category)
+            log_info("【修改记录】成功！\n\
+            原纪录：%s\n\
+            新记录：%s" % \
+            (self.results[1:-1],(new_category,date,content,issignif)))
+        except Exception:
+            log_error("【修改记录】出现错误！")
+            messagebox.showerror("ERROR","发生错误")
         self.modified = 1
         self.quit()
 
