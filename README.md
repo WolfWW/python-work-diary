@@ -2,7 +2,7 @@
 A desktop application for logging details of work.
 
 ---
-
+**初次使用请点击【初始化数据库】**
 **数据库文件在0.4.2中移到了代码文件夹中，已有的数据库手动移动后再使用**
 
 ---
@@ -26,7 +26,6 @@ A desktop application for logging details of work.
  - 界面美化
  - 增加待办事项
  - 增加导出功能
- - 增加用户日志
 
 
 ### 版权说明
