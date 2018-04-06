@@ -5,6 +5,10 @@
 ### Added
 - 增加保密措施
 
+## [0.5.2] - 2018-04-06
+### Changed
+- excel的sheetname和任务保持一致
+
 ## [0.5.1] - 2018-04-06
 ### Added
 - 查询结果可以导出为Excel，并可选择是否立即打开
@@ -50,7 +54,8 @@
 ## 0.1.1 - 2018-03-21
 - 初始版本
 
-[Unreleased]: https://github.com/WolfWW/python-work-diary/compare/v0.5.1...HEAD
+[Unreleased]: https://github.com/WolfWW/python-work-diary/compare/v0.5.2...HEAD
+[0.5.2]: https://github.com/WolfWW/python-work-diary/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/WolfWW/python-work-diary/compare/v0.4.2...v0.5.1
 [0.4.2]: https://github.com/WolfWW/python-work-diary/compare/v0.3.3...v0.4.2
 [0.3.3]: https://github.com/WolfWW/python-work-diary/compare/v0.3.2...v0.3.3

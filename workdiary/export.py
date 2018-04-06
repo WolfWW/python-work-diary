@@ -5,9 +5,10 @@ from xlwt import *
 import datetime
 
 class ToExcel(Workbook):
-    def __init__(self,results):
+    def __init__(self,results,sheetname):
         super().__init__()
         self.results = results
+        self.sheetname = sheetname
         self.write_to_wkbook()
         self.save_to_file()
         
@@ -17,7 +18,7 @@ class ToExcel(Workbook):
         写工作表
         results中的id不写，因此column从1开始
         '''
-        sheet = self.add_sheet('work')
+        sheet = self.add_sheet(self.sheetname)
         
         for row in range(len(self.results)):
             for column in range(1,len(self.results[row])):

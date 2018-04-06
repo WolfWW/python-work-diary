@@ -455,7 +455,7 @@ class QueryRoot(Toplevel):
     def export_to_excel(self):
         '''导出excel到当前文件夹'''
         try:
-            excel = export.ToExcel(self.results)
+            excel = export.ToExcel(self.results,self.export_title)
             log_info('导出excel。\n导出内容为：%s\n文件路径：%s' % (self.export_title,excel.filepath))
             if messagebox.askyesno("导出成功","文件名如下：\n%s\n是否打开?" % excel.filename):
                 filepath = os.path.abspath(excel.filepath)
