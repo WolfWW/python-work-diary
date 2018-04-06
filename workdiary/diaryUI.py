@@ -19,7 +19,7 @@
 '''
 
 
-import os                                   # for delete db file
+import os                                   # for delete db file & open excel
 import datetime
 import hashlib
 from tkinter import *
@@ -34,7 +34,8 @@ from TtkCalendar import ttkcalendar
 from TtkCalendar import tkSimpleDialog
 from TtkCalendar import CalendarDialog
 
-import main
+import main                                 # datebase logic
+import export                               # for export to excel
 
 
 LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
@@ -78,7 +79,7 @@ class DiaryRoot(Tk):
         self.init_frame()
         self.clear_frame()
         self.new_frame()
-        
+
         
     def init_frame(self):
         # 初始化选择
@@ -91,7 +92,7 @@ class DiaryRoot(Tk):
         ttk.Combobox(init_frame,textvariable=self.category,values=['工作','生活','学习'],width=4,state='readonly').grid(row=1,column=0,padx=5,pady=5)
 
         # 日期录入
-        Label(init_frame,text='日期（当天添加记录可不选）').grid(row=0,column=1,padx=5,pady=5,columnspan=2)  
+        Label(init_frame,text='日期（不选则默认当天）').grid(row=0,column=1,padx=5,pady=5,columnspan=2)  
         self.date = StringVar()
         #self.date.set()
         Label(init_frame, textvariable=self.date,width=11,bd=3,relief=SUNKEN).grid(row=1,column=1)
@@ -306,7 +307,7 @@ class DiaryRoot(Tk):
         
     def query_results(self,frame_text,category_list,date_list,content,issignif,detail,state=NORMAL):
         '''执行查询记录的方法'''
-        results = [('ID','分类','日期','内容','是否重要','点击查看详情'),]
+        results = [('ID','分类','日期','内容','是否重要','详情'),]
         for category in category_list:
             for date in date_list:
                 results_temp = self.record.query_record(category,date,content,issignif,detail)
@@ -322,6 +323,9 @@ class DiaryRoot(Tk):
 
 
 class DetailRoot(Toplevel):
+    '''
+    详情窗口
+    '''
     def __init__(self,detail,state=NORMAL):
         super().__init__()
         self.detail = detail        # 把主窗口的detail赋值给此页面
@@ -363,25 +367,46 @@ class DetailRoot(Toplevel):
         
         
 class QueryRoot(Toplevel):
+    '''
+    查询窗口
+    '''
     def __init__(self,results,frame_text,state=NORMAL):
         super().__init__()
         self.title(frame_text)
+        self.export_title = frame_text
         self.results = results
         self.state = state
         self.modified = 0
         self.query_record()
         self.resizable(False,True)
+        self.window_height = self.window_height()
+        self.geometry("%dx%d"%(728,self.window_height))
+        
+        
+    def window_height(self):
+        '''
+        计算窗口高度，一行结果30像素
+        rows要减3是因为窗口边框和桌面下面的任务栏
+        '''
+        os_height = self.winfo_screenheight()
+        rows = os_height // 30 - 3
+        if len(self.results) < rows:
+            height = len(self.results) * 30
+        else:
+            height = os_height - 90
+        return height
 
         
     def query_record(self):
         '''查询记录'''
         
-        width_list = [0,10,10,30,10]
+        width_list = [0,11,13,44,11]
         bar = Scrollbar(self,takefocus=False)
         bar.pack(side=RIGHT,fill=Y)
         # bg选白烟色，最接近默认组件的颜色
-        self.text = Text(self,bg='WhiteSmoke',height=50,width=85,yscrollcommand=bar.set)
-        self.text.pack(side=RIGHT,fill=X)
+        # width别问我101怎么来的
+        self.text = Text(self,bg='WhiteSmoke',width=101,yscrollcommand=bar.set)
+        self.text.pack(side=RIGHT,fill=BOTH)
         bar['command'] = self.text.yview
         
         for i in range(len(self.results)):
@@ -391,7 +416,8 @@ class QueryRoot(Toplevel):
                 label = Label(self.text, textvariable=entry,width=width_list[j],bd=3,relief=SUNKEN,justify=CENTER)
                 self.text.window_create(INSERT,window=label)
             if i == 0:
-                self.text.insert(END,'\n')
+                export_button = Button(self.text,text='导出excel',width=15,command=self.export_to_excel)
+                self.text.window_create(INSERT,window=export_button)
             else:
                 show_detail = Button(self.text,text='查看详情')
                 show_detail.bind("<ButtonRelease-1>",self.get_detail)
@@ -416,6 +442,7 @@ class QueryRoot(Toplevel):
 
 
     def modify_record(self,event):
+        '''在新弹窗中修改记录'''
         row = int(self.text.index(event.widget)[0]) - 1
         modify_root = ModifyRoot(self.results[row])
         self.wait_window(modify_root)
@@ -423,6 +450,19 @@ class QueryRoot(Toplevel):
         if modify_root.modified == 1:
             self.modified = 1
             self.destroy()
+            
+            
+    def export_to_excel(self):
+        '''导出excel到当前文件夹'''
+        try:
+            excel = export.ToExcel(self.results)
+            log_info('导出excel。\n导出内容为：%s\n文件路径：%s' % (self.export_title,excel.filepath))
+            if messagebox.askyesno("导出成功","文件名如下：\n%s\n是否打开?" % excel.filename):
+                filepath = os.path.abspath(excel.filepath)
+                os.system(filepath)
+        except Exception:
+            log_error('【导出excel】出现错误')
+            messagebox.showerror("ERROR","导出过程发生错误")
         
 
 class ModifyRoot(Toplevel):
