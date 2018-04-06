@@ -102,3 +102,7 @@ ENV/
 
 # DB
 *.db
+
+# TEST files
+*.xls
+*.log.*
