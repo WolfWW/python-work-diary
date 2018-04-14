@@ -3,7 +3,20 @@
 
 ## [Unreleased]
 ### Added
-- 增加保密措施
+- 增加可选是否需要加密
+- 增加设置口令时的字符串检查
+- 增加可修改口令
+- 增加密文库完整性检测
+### Changed
+- UI界面美化
+- 确认稳定后，关闭程序时直接删除明文库
+
+## [0.6.3] - 2018-04-14
+### Added
+- 增加数据库加密，关闭程序时明文库会移动到D盘
+### Changed
+- 运行日志改成3天滚动了，并且尽量让每两条日志间有一个空行
+- 修改许可证为MPL2.0
 
 ## [0.5.2] - 2018-04-06
 ### Changed
@@ -54,7 +67,8 @@
 ## 0.1.1 - 2018-03-21
 - 初始版本
 
-[Unreleased]: https://github.com/WolfWW/python-work-diary/compare/v0.5.2...HEAD
+[Unreleased]: https://github.com/WolfWW/python-work-diary/compare/v0.6.3...HEAD
+[0.6.3]: https://github.com/WolfWW/python-work-diary/compare/v0.5.2...v0.6.3
 [0.5.2]: https://github.com/WolfWW/python-work-diary/compare/v0.5.1...v0.5.2
 [0.5.1]: https://github.com/WolfWW/python-work-diary/compare/v0.4.2...v0.5.1
 [0.4.2]: https://github.com/WolfWW/python-work-diary/compare/v0.3.3...v0.4.2

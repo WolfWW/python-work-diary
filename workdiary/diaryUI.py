@@ -4,14 +4,16 @@
 '''
 工作记录小软件UI，距离起初吹下的牛B还有很长一段距离
 计划功能如下（TODO）：
-1.记录时有多种预设分类，并可自定义分类，如工作、学习、娱乐等
+1.[x]记录时有多种预设分类，并可自定义分类，如工作、学习、娱乐等
 2.本地数据库记录，可通过日期、分类、关键字查询
 3.可导出为excel
-4.待办事项，默认为全部列出，可设提醒时间
+4.[x]待办事项，默认为全部列出，可设提醒时间
 5.默认记录时间为当前时间，可手动填入
 6.录入时可选择是否标记为重要工作
 7.软件运行日志记录
-8.可以进行用户设置，包括开机自启、字体等
+8.[x]可以进行用户设置，包括开机自启、字体等
+
+目前功能请参考README
 '''
 
 '''
@@ -36,6 +38,7 @@ from TtkCalendar import CalendarDialog
 
 import main                                 # datebase logic
 import export                               # for export to excel
+import myaes                                # for encrypt & decrypt dbfile
 
 
 LOG_FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
@@ -49,7 +52,7 @@ ERROR_LEVEL = logging.ERROR
 logger = logging.getLogger(__name__)
 logger.setLevel(INFO_LEVEL)
 
-info_handler = logging.handlers.TimedRotatingFileHandler(INFO_FILE,when='D',interval=1,backupCount=3)
+info_handler = logging.handlers.TimedRotatingFileHandler(INFO_FILE,when='D',interval=3,backupCount=3)
 info_formatter = logging.Formatter(fmt=LOG_FORMAT,datefmt=DATE_FORMAT)
 info_handler.setFormatter(info_formatter)
 
@@ -72,10 +75,32 @@ def log_error(msg):
 class DiaryRoot(Tk):
     def __init__(self):
         super().__init__()
+        self.resizable(False,False)
+        self.crypto_DB()
+        
+        
+    def crypto_DB(self):
+        '''
+        打开口令窗口
+        首次成功设置口令或口令验证成功才打开主界面
+        '''
+        crypto_window = CryptoRoot()
+        self.wait_window(crypto_window)
+        self.password = crypto_window.password
+        if crypto_window.check_password == 1:
+            self.root_window()
+        else:
+            self.destroy()
+        
+        
+    def root_window(self):
+        '''这里才是真正的init'''
         self.title('Python Workdiary')
-        self.database = './workdiary.db'
+        self.protocol("WM_DELETE_WINDOW",self.encrypt_DB)   # 如果在函数后面加上()，就会在初始化时直接执行
+        self.database = './workdiary.db'                    # 明文库
+        self.encrypted_DB = './diary.enc'                   # 密文库
         self.record = main.Record(self.database)
-        self.detail = ''                         # 详细内容
+        self.detail = ''                                    # 记录的详细内容
         self.init_frame()
         self.clear_frame()
         self.new_frame()
@@ -214,6 +239,7 @@ class DiaryRoot(Tk):
         
         
     def clear_frame(self):
+        '''初始化数据库区域'''
         # 初始化区框架
         clear_frame = LabelFrame(self,text='下列操作将清空表或数据库，谨慎操作')
         clear_frame.grid(row=1,column=0)
@@ -261,10 +287,28 @@ class DiaryRoot(Tk):
         
     def quit(self):
         '''关闭程序'''
+        self.encrypt_DB()
+        
+        
+    def encrypt_DB(self):
+        '''
+        加密明文库
+        新的密文库会直接覆盖原来的
+        移动或删除明文库
+        最后关闭程序窗口
+        '''
+        self.record.disconnect()
+        try:
+            myaes.aesMode(self.database,self.encrypted_DB,'加密',self.password)
+            log_info("【程序关闭】正常，数据库已加密")
+        except Exception:
+            log_error("【加密数据库】发生错误！")
+            messagebox.showerror("ERROR","加密数据库发生错误")
         self.destroy()
         
         
     def new_frame(self):
+        '''近两日按钮区'''
         new_frame = Frame(self)
         new_frame.grid(row=1,column=1)
     
@@ -330,6 +374,7 @@ class DetailRoot(Toplevel):
         super().__init__()
         self.detail = detail        # 把主窗口的detail赋值给此页面
         self.title('详细内容')
+        self.resizable(False,False)
         self.state = state
         self.input_detail()
 
@@ -456,7 +501,7 @@ class QueryRoot(Toplevel):
         '''导出excel到当前文件夹'''
         try:
             excel = export.ToExcel(self.results,self.export_title)
-            log_info('导出excel。\n导出内容为：%s\n文件路径：%s' % (self.export_title,excel.filepath))
+            log_info('导出excel。\n导出内容为：%s\n文件路径：%s\n' % (self.export_title,excel.filepath))
             if messagebox.askyesno("导出成功","文件名如下：\n%s\n是否打开?" % excel.filename):
                 filepath = os.path.abspath(excel.filepath)
                 os.system(filepath)
@@ -472,6 +517,7 @@ class ModifyRoot(Toplevel):
     def __init__(self,results):
         super().__init__()
         self.title('修改记录页')
+        self.resizable(False,False)
         self.database = './workdiary.db'
         self.record = main.Record(self.database)
         self.results = results
@@ -479,6 +525,7 @@ class ModifyRoot(Toplevel):
         self.modified = 0
         self.frame()
 
+        
     def frame(self):
         init_frame = Frame(self)
         init_frame.grid(row=0,column=0)
@@ -571,6 +618,172 @@ class ModifyRoot(Toplevel):
     def quit(self):
         self.destroy()
 
+        
+        
+class CryptoRoot(Toplevel):
+    def __init__(self):
+        super().__init__()
+        self.title('口令页')
+        self.resizable(False,False)
+        self.attributes('-topmost',True)                      # 本窗口置于主窗口之上
+        # pass文件的路径获取
+        # 用python IDLE打开肯定正常
+        # notepad++需要在'运行'命令中进入当前文件目录，否则获取的是编辑器的路径
+        self.passfilename = './check.pass'
+        self.passwd_file = os.path.abspath('.') + self.passfilename[1:]
+        self.plain_DB = './workdiary.db'
+        self.encrypted_DB = './diary.enc'
+        self.user_password = ''                               # 用户输入的口令，会经过处理成为密钥
+        self.password = ''                                    # 最终密钥，调用myaes时参数key都是它
+        self.have_set = 0                                     # 未设置过口令为0，否则为1
+        self.check_password = 0                               # 口令输入正确或设置口令后置1，否则为0，程序关闭
+        self.check_state()
+        
+        
+    def check_state(self):
+        '''
+        检查是否已设置口令
+        直接搜索有没有口令文件存在就好了
+        '''
+        self.input_passwd() if os.path.exists(self.passwd_file) else self.set_passwd()
+
+            
+    def input_passwd(self):
+        '''输入口令的frame，用于解密'''
+        Label(self,text='输入口令',width=12).grid(row=0,column=0,padx=5,pady=5)
+        self.pass1 = StringVar()
+        Entry(self,textvariable=self.pass1,width=15,show='*').grid(row=0,column=1,padx=5,pady=5)
+        
+        Button(self,text="确定",width=10,command=self.check_passwd).grid(row=1,columnspan=2,padx=10,pady=5,sticky=E+W)
+        Button(self,text="取消",width=10,command=self.destroy).grid(row=2,columnspan=2,padx=10,pady=5,sticky=E+W)
+
+        
+    def set_passwd(self):
+        '''
+        设置口令
+        口令的hash值会保存到一个文本中
+        以后输入口令会和这个hash比较，不同就不会进入下一步
+        '''
+        Label(self,text='输入口令',width=12).grid(row=0,column=0,padx=5,pady=5)
+        self.pass2 = StringVar()
+        Entry(self,textvariable=self.pass2,width=15,show='*').grid(row=0,column=1,padx=5,pady=5)
+        
+        Label(self,text='再次输入口令',width=12).grid(row=1,column=0,padx=5,pady=5)
+        self.pass3 = StringVar()
+        Entry(self,textvariable=self.pass3,width=15,show='*').grid(row=1,column=1,padx=5,pady=5)
+        
+        Button(self,text="确定",width=10,command=self.gene_pass_file).grid(row=2,columnspan=2,padx=10,pady=5,sticky=E+W)
+        Button(self,text="取消",width=10,command=self.destroy).grid(row=3,columnspan=2,padx=10,pady=5,sticky=E+W)
+        
+        
+    def check_passwd(self):
+        '''
+        检查口令是否正确
+        计算输入口令的hash，和口令文件中保存的hash比较
+        '''
+        final_password = hashlib.sha256(self.pass1.get().encode('utf-8')).hexdigest()[:32]
+        user_hash = hashlib.sha256(final_password.encode('utf-8')).hexdigest()
+        saved_hash = open(self.passwd_file,'r').read()
+        if user_hash == saved_hash:
+            self.check_password = 1
+            self.password = final_password
+            self.check_dbfile()
+            self.destroy()
+        else:
+            messagebox.showwarning('WARNING','口令错误，请重新输入')
+            log_error("【口令错误】错误口令：%s" % self.pass1.get())
+            self.pass1.set('')
+        
+        
+    def check_dbfile(self):
+        '''
+        判断当前文件夹中密文库和明文库的存在
+        密文有明文无，正常解密连接
+        密文无明文无，提示后关闭
+        密文有明文有，用户选择
+        密文无明文有，用户选择连明文或关闭
+        '''
+        if os.path.exists(self.encrypted_DB) and not os.path.exists(self.plain_DB):
+            try:
+                self.decryption()
+                log_info("【数据库解密成功】")
+            except Exception:
+                log_error("【数据库解密】发生错误！")
+        elif not os.path.exists(self.encrypted_DB) and not os.path.exists(self.plain_DB):
+            messagebox.showerror("ERROR",'数据库不存在，请检查后重启程序')
+            self.destroy()
+        elif os.path.exists(self.encrypted_DB) and os.path.exists(self.plain_DB):
+            if messagebox.askyesno('INFO','密文库和明文库都存在，请仔细检查\n\
+                            "是"连接明文库，关闭程序时会覆盖现有密文库\n\
+                            "否"解密密文库，会立刻覆盖现有明文库'):
+                log_info("两种库都有，用户选择连接明文库")
+                return
+            else:
+                log_info("两种库都有，用户选择连接密文库")
+                try:
+                    self.decryption()
+                    log_info("【数据库解密成功】")
+                except Exception:
+                    log_error("两种库都有，用户选择连接密文库；解密中出现错误")
+                    messagebox.showerror("ERROR","发生错误")
+        else:
+            if messagebox.askokcancel("Warn",'当前文件夹不存在密文库\n"确定"将连接明文库'):
+                return
+            else:
+                self.destroy()
+                
+                
+    def decryption(self):
+        '''
+        解密数据库
+        '''
+        myaes.aesMode(self.encrypted_DB,self.plain_DB,'解密',self.password)
+        #enc_db_path = os.path.abspath(self.encrypted_DB)
+        #cmd_command = 'del %s' % enc_db_path               # 删除密文库
+        #cmd_command = 'move /Y %s d:/' % enc_db_path       # 移动密文库
+        #os.system(cmd_command)
+        # 上面的代码开启后，程序连接明文库期间，当前文件夹中没有密文库
+        
+        
+    def gene_pass_file(self):
+        '''
+        设置口令后生成口令文件
+        先检查两次口令是否相同且不是空的
+        然后计算hash值写到文件里
+        '''
+        try:
+            if self.verify_passwd():
+                self.check_password = 1
+                file = open(self.passfilename,'wb')
+                self.password = hashlib.sha256(self.user_password.encode('utf-8')).hexdigest()[:32]
+                hash = hashlib.sha256(self.password.encode('utf-8')).hexdigest()
+                file.write(hash.encode('utf-8'))
+                file.close()
+                log_info("【生成口令文件】成功！")
+                self.destroy()
+        except Exception:
+            log_error("【生成口令文件】出现错误！")
+            messagebox.showerror("ERROR","生成口令文件时发生错误")
+            
+            
+    def verify_passwd(self):
+        '''
+        设置口令时的验证
+        '''
+        if self.pass2.get().strip() != '':
+            if self.pass2.get() == self.pass3.get():
+                self.user_password = self.pass2.get()
+                return 1
+            else:
+                messagebox.showinfo('INFO','两次口令输入不一致')
+                self.pass2.set('')
+                self.pass3.set('')
+        else:
+            messagebox.showwarning('WARNING','无效的口令')
+            self.pass2.set('')
+            self.pass3.set('')
+            
+            
 
 if __name__ == '__main__':
     APP = DiaryRoot()
