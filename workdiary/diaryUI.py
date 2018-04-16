@@ -76,15 +76,65 @@ class DiaryRoot(Tk):
     def __init__(self):
         super().__init__()
         self.resizable(False,False)
-        self.crypto_DB()
+        self.resizable(False,False)
+        self.passwd_file = './check.pass'
+        self.plain_DB = './workdiary.db'
+        self.encrypted_DB = './diary.enc'
+        self.temp_plain = './plain.temp'                    # 明文的hash||明文
+        self.user_chose_enc = 1                             # 用户对加密的选择，1表示要加密，0表示不加密
+        self.check_enc_state()
         
         
-    def crypto_DB(self):
+    def check_enc_state(self):
         '''
-        打开口令窗口
-        首次成功设置口令或口令验证成功才打开主界面
+        检查是否已设置口令
+        直接搜索有没有口令文件存在就好了
+        查看是不是0以判断是否设置为不加密
         '''
+        if os.path.exists(self.passwd_file):
+            if open(self.passwd_file,'r').read() == '0':
+                self.user_chose_enc = 0
+                self.root_window()
+                log_info('没有设置过加密，直接打开明文库')
+            else:
+                self.input_passwd()
+        else:
+            self.set_passwd()
+    
+            
+    def input_passwd(self):
+        '''进入输口令流程'''
+        self.crypto_DB('input')
+            
+            
+    def set_passwd(self):
+        '''
+        询问是否要加密
+        加密就进入设置流程
+        不加密就设置参数为0        
+        '''
+        if messagebox.askyesno('ASK','是否设置口令？'):
+            try:
+                self.crypto_DB('set')
+                log_info('选择加密，成功设置口令')
+            except Exception:
+                log_error('选择加密，设置口令出错')
+        else:
+            self.user_chose_enc = 0
+            with open(self.passwd_file,'w') as f:
+                f.write('0')
+                f.close()
+            self.root_window()
+            log_info('选择不加密，打开程序')
+
+
+    def crypto_DB(self,operation):
+        '''打开口令窗口'''
         crypto_window = CryptoRoot()
+        if operation == 'input':
+            crypto_window.input_passwd()
+        elif operation == 'set':
+            crypto_window.set_passwd()
         self.wait_window(crypto_window)
         self.password = crypto_window.password
         if crypto_window.check_password == 1:
@@ -96,10 +146,8 @@ class DiaryRoot(Tk):
     def root_window(self):
         '''这里才是真正的init'''
         self.title('Python Workdiary')
-        self.protocol("WM_DELETE_WINDOW",self.encrypt_DB)   # 如果在函数后面加上()，就会在初始化时直接执行
-        self.database = './workdiary.db'                    # 明文库
-        self.encrypted_DB = './diary.enc'                   # 密文库
-        self.record = main.Record(self.database)
+        self.protocol("WM_DELETE_WINDOW",self.quit)         # 如果在函数后面加上()，就会在初始化时直接执行
+        self.record = main.Record(self.plain_DB)
         self.detail = ''                                    # 记录的详细内容
         self.init_frame()
         self.clear_frame()
@@ -276,8 +324,8 @@ class DiaryRoot(Tk):
         if messagebox.askokcancel("初始化","初始化会删除所有记录!\n确定要初始化数据库吗？"):
             try:
                 self.record.disconnect()
-                os.unlink(self.database)
-                self.record = main.Record(self.database)
+                os.unlink(self.plain_DB)
+                self.record = main.Record(self.plain_DB)
                 self.record.init_sql()
                 log_info("执行【数据库初始化】命令！")
             except Exception:
@@ -287,24 +335,38 @@ class DiaryRoot(Tk):
         
     def quit(self):
         '''关闭程序'''
-        self.encrypt_DB()
+        if self.user_chose_enc == 0:
+            self.destroy()
+        else:
+            self.encrypt_DB()
+            self.destroy()
         
         
     def encrypt_DB(self):
         '''
         加密明文库
         新的密文库会直接覆盖原来的
-        移动或删除明文库
+        删除明文库
         最后关闭程序窗口
         '''
         self.record.disconnect()
+
         try:
-            myaes.aesMode(self.database,self.encrypted_DB,'加密',self.password)
+            plain_data = open(self.plain_DB,'rb').read()                                        # 这里只能rb读
+            whole_data = hashlib.sha256(plain_data).hexdigest().encode('utf-8') + plain_data    # 明文全用bytes
+            with open(self.temp_plain,'wb') as f:
+                f.write(whole_data)
+                f.close()
+            myaes.aesMode(self.temp_plain,self.encrypted_DB,'加密',self.password)
+            temp_plain_path = os.path.abspath(self.temp_plain)
+            cmd_command = 'move /Y ./workdiary.db d:/'
+            os.system(cmd_command)
+            cmd_command = 'del %s' % temp_plain_path
+            os.system(cmd_command)
             log_info("【程序关闭】正常，数据库已加密")
         except Exception:
             log_error("【加密数据库】发生错误！")
             messagebox.showerror("ERROR","加密数据库发生错误")
-        self.destroy()
         
         
     def new_frame(self):
@@ -444,7 +506,6 @@ class QueryRoot(Toplevel):
         
     def query_record(self):
         '''查询记录'''
-        
         width_list = [0,11,13,44,11]
         bar = Scrollbar(self,takefocus=False)
         bar.pack(side=RIGHT,fill=Y)
@@ -471,6 +532,7 @@ class QueryRoot(Toplevel):
                 self.text.window_create(INSERT,window=modify_button)
                 if self.state == NORMAL:
                     modify_button.bind('<ButtonRelease-1>',self.modify_record)
+            self.text.insert(END,'\n')
         self.text['state'] = DISABLED                
 
     
@@ -633,20 +695,11 @@ class CryptoRoot(Toplevel):
         self.passwd_file = os.path.abspath('.') + self.passfilename[1:]
         self.plain_DB = './workdiary.db'
         self.encrypted_DB = './diary.enc'
+        self.temp_plain = './plain.temp'
         self.user_password = ''                               # 用户输入的口令，会经过处理成为密钥
         self.password = ''                                    # 最终密钥，调用myaes时参数key都是它
-        self.have_set = 0                                     # 未设置过口令为0，否则为1
         self.check_password = 0                               # 口令输入正确或设置口令后置1，否则为0，程序关闭
-        self.check_state()
         
-        
-    def check_state(self):
-        '''
-        检查是否已设置口令
-        直接搜索有没有口令文件存在就好了
-        '''
-        self.input_passwd() if os.path.exists(self.passwd_file) else self.set_passwd()
-
             
     def input_passwd(self):
         '''输入口令的frame，用于解密'''
@@ -737,10 +790,18 @@ class CryptoRoot(Toplevel):
         '''
         解密数据库
         '''
-        myaes.aesMode(self.encrypted_DB,self.plain_DB,'解密',self.password)
+        myaes.aesMode(self.encrypted_DB,self.temp_plain,'解密',self.password)
+        data = open(self.temp_plain,'rb').read()
+        if hashlib.sha256(data[64:]).hexdigest() != data[:64].decode('utf-8'):
+            messagebox.showwarning("WARNING",'注意！检测到密文可能被修改')
+            log_error('【完整性检测】发现密文可能被修改')
+        with open(self.plain_DB,'wb') as f:
+            f.write(data[64:])
+            f.close()
+        cmd_command = 'del %s' % os.path.abspath(self.temp_plain)
+        os.system(cmd_command)
         #enc_db_path = os.path.abspath(self.encrypted_DB)
         #cmd_command = 'del %s' % enc_db_path               # 删除密文库
-        #cmd_command = 'move /Y %s d:/' % enc_db_path       # 移动密文库
         #os.system(cmd_command)
         # 上面的代码开启后，程序连接明文库期间，当前文件夹中没有密文库
         
