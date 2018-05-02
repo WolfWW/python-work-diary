@@ -106,3 +106,4 @@ ENV/
 # TEST files
 *.xls
 *.log.*
+*.pass
