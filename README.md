@@ -13,16 +13,14 @@ A desktop application for logging details of work.
 1. 本地数据库实现添加记录、查询记录、修改近两日记录、清空某个分类记录、重置数据库等功能；
 2. 添加记录时有工作、学习、生活等预设分类
 3. 可通过日期、分类、关键字等精确查询和模糊查询
-4. 添加日志功能，记录正常日志和错误日志
+4. 运行日志功能，记录正常日志和错误日志
 5. 查询记录的结果可导出为excel
 6. 数据库加密。使用AES-256对库加密，基于口令生成密钥
 
 
 ### 软件截图
 
-![mark](http://omvy9d3lc.bkt.clouddn.com/blog/180326/b82h50iJmf.png?imageslim)
-
-![mark](http://omvy9d3lc.bkt.clouddn.com/blog/180326/4DhhmfBAjJ.png?imageslim)
+![mark](http://omvy9d3lc.bkt.clouddn.com/blog/180502/3kj2j94fAL.png?imageslim)
 
 
 ### 需求
@@ -67,9 +65,8 @@ A desktop application for logging details of work.
  
 ### 下一步
 
- - 界面美化
  - 增加待办事项
- - 修改口令
+ - 修改口令以及口令合法性检测
 
  
 ### 版权说明

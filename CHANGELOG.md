@@ -5,9 +5,14 @@
 ### Added
 - 增加设置口令时的字符串检查
 - 增加可修改口令
+- 删除记录的功能
+### Changed
+- 确认稳定后，关闭程序时直接删除明文库
+
+## [1.0.0] - 2018-05-02
 ### Changed
 - UI界面美化
-- 确认稳定后，关闭程序时直接删除明文库
+- 重要性初始化默认改回空
 
 ## [0.7.2] - 2018-04-16
 ### Added
@@ -72,7 +77,8 @@
 ## 0.1.1 - 2018-03-21
 - 初始版本
 
-[Unreleased]: https://github.com/WolfWW/python-work-diary/compare/v0.7.2...HEAD
+[Unreleased]: https://github.com/WolfWW/python-work-diary/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/WolfWW/python-work-diary/compare/v0.7.2...v1.0.0
 [0.7.2]: https://github.com/WolfWW/python-work-diary/compare/v0.6.3...v0.7.2
 [0.6.3]: https://github.com/WolfWW/python-work-diary/compare/v0.5.2...v0.6.3
 [0.5.2]: https://github.com/WolfWW/python-work-diary/compare/v0.5.1...v0.5.2
