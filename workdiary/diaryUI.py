@@ -560,7 +560,7 @@ class DiaryRoot(Tk):
         '''
         author_frame = Frame(self.left_frame)
         author_frame.pack(expand=True,fill=BOTH)
-        Label(author_frame,text='联系我：45908757').pack(fill=BOTH)
+        Label(author_frame,text='联系我：10010').pack(fill=BOTH)
       
 
 
