@@ -182,6 +182,7 @@ class DiaryRoot(Tk):
         # 分类选择
         Label(init_frame,text='分类',relief=RIDGE,width=8).grid(row=0,column=0,padx=5,pady=5)
         self.category = StringVar()
+        self.category.set('工作')
         ttk.Combobox(init_frame,textvariable=self.category,values=['工作','生活','学习'],width=4,state='readonly').grid(row=0,column=1,padx=5,pady=5,sticky=W+E)
 
         # 日期录入
@@ -269,9 +270,14 @@ class DiaryRoot(Tk):
             
             if date == '':
                 date = str(self.get_localtime())[:10]
+                
+            if category == '':
+                messagebox.showinfo("INFO","未选择分类")
+                return
             
             self.record.new_record(category,date,content,issignif,detail)
             log_info("成功在【%s】添加一条记录，主题'%s'\n" % (category,content))
+            self.clear_all()
         except Exception:
             log_error("【添加记录】过程出现错误：\n\
                 分类：%s\n\
@@ -487,8 +493,8 @@ class DiaryRoot(Tk):
         bar = Scrollbar(result_frame,takefocus=False)
         bar.pack(side=RIGHT,fill=Y)
         # bg选白烟色，最接近默认组件的颜色
-        # width别问我101怎么来的
-        self.text = Text(result_frame,bg='WhiteSmoke',width=101,yscrollcommand=bar.set)
+        # width别问我109怎么来的
+        self.text = Text(result_frame,bg='WhiteSmoke',width=109,yscrollcommand=bar.set)
         self.text.pack(side=RIGHT,fill=BOTH)
         bar['command'] = self.text.yview
         
@@ -510,6 +516,9 @@ class DiaryRoot(Tk):
                 self.text.window_create(INSERT,window=modify_button)
                 if modify_button_state == NORMAL:
                     modify_button.bind('<ButtonRelease-1>',self.modify_record)
+                delete_button = Button(self.text,text='删除记录')
+                delete_button.bind("<ButtonRelease-1>",self.delete_record)
+                self.text.window_create(INSERT,window=delete_button)
             self.text.insert(END,'\n')                                      # 这一行不能删！否则无法获得显示详情时的row
         self.text['state'] = DISABLED                
 
@@ -552,6 +561,28 @@ class DiaryRoot(Tk):
         except Exception:
             log_error('【导出excel】出现错误')
             messagebox.showerror("ERROR","导出过程发生错误")
+    
+    
+    def delete_record(self,event):
+        '''
+        删除所选记录
+        '''
+        row = int(self.text.index(event.widget)[0]) - 1
+
+        id = self.results[row][0]
+        category = self.results[row][1]
+        content = self.results[row][3]
+        if messagebox.askyesno("删除记录","确认删除所选记录？"):
+            try:
+                self.record.del_record(id,category)
+                log_info("成功在【%s】删除一条记录，主题'%s'\n" % (category,content))
+                messagebox.showinfo("INFO","删除成功！\n请重新查询记录")
+            except Exception:
+                log_error("【删除记录】过程出现错误：\n\
+                    分类：%s\n\
+                    主题：%s\n" % \
+                    (category,content))
+                messagebox.showerror("ERROR","发生错误")
     
     
     def author_frame(self):
