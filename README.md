@@ -21,7 +21,7 @@ A desktop application for logging details of work.
 
 ### 软件截图
 
-![mark](http://omvy9d3lc.bkt.clouddn.com/blog/180502/3kj2j94fAL.png?imageslim)
+![mark](https://wolfww.oss-cn-hongkong.aliyuncs.com/workdiary%E6%A0%B7%E5%9B%BE.PNG)
 
 
 ### 需求
