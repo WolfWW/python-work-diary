@@ -3,12 +3,21 @@
 
 ## [Unreleased]
 ### Added
-- 增加设置口令时的字符串检查
-- 增加可修改口令
+- 设置口令时的字符串检查
+- 可修改口令
 - 按年查询记录
+- 增加分类
+- 待办事项模块，可在全部待办和当天待办切换显示
 ### Changed
 - 确认稳定后，关闭程序时直接删除明文库
 - 删除记录后直接刷新当前查询
+
+## [1.1.3] - 2019-08-27
+### Changed
+- 修改重要性选择默认为否
+- 数据库中只建立一个表，原来是每个分类一个表
+### Fixed
+- 修复导出excel失败
 
 ## [1.1.0] - 2018-05-26
 ### Added
@@ -86,7 +95,8 @@
 ## 0.1.1 - 2018-03-21
 - 初始版本
 
-[Unreleased]: https://github.com/WolfWW/python-work-diary/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/WolfWW/python-work-diary/compare/v1.1.1...HEAD
+[1.1.1]: https://github.com/WolfWW/python-work-diary/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/WolfWW/python-work-diary/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/WolfWW/python-work-diary/compare/v0.7.2...v1.0.0
 [0.7.2]: https://github.com/WolfWW/python-work-diary/compare/v0.6.3...v0.7.2

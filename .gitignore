@@ -107,3 +107,11 @@ ENV/
 *.xls
 *.log.*
 *.pass
+*.ico
+
+# Pipenv
+Pipfile
+Pipfile.lock
+
+# pycharm files
+.idea/

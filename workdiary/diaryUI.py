@@ -1,7 +1,7 @@
 # windows10/python3.5
 #-*- coding:utf-8 -*-
 
-'''
+"""
 工作记录小软件UI，距离起初吹下的牛B还有很长一段距离
 计划功能如下（TODO）：
 1.[x]记录时有多种预设分类，并可自定义分类，如工作、学习、娱乐等
@@ -14,11 +14,11 @@
 8.[x]可以进行用户设置，包括开机自启、字体等
 
 目前功能请参考README
-'''
+"""
 
-'''
+"""
 日期选择插件来源：https://github.com/moshekaplan/tkinter_components
-'''
+"""
 
 
 import os                                   # for delete db file & open excel
@@ -48,6 +48,9 @@ INFO_FILE = "./info.log"
 ERROR_FILE = "./error.log"
 INFO_LEVEL = logging.DEBUG
 ERROR_LEVEL = logging.ERROR 
+
+# 默认分类
+CATEGORY_LIST = ["工作","生活","学习"]
 
 logger = logging.getLogger(__name__)
 logger.setLevel(INFO_LEVEL)
@@ -84,12 +87,12 @@ class DiaryRoot(Tk):
 
     
     def check_enc_state(self):
-        '''
+        """
         检查是否已设置口令
         直接搜索有没有口令文件存在就好了
-        '''
+        """
         if os.path.exists(self.passwd_file):
-            '''查看是0还是hash'''
+            """查看是0还是hash"""
             if open(self.passwd_file,'r').read() == '0':
                 self.user_chose_enc = 0
                 self.root_window()
@@ -97,21 +100,21 @@ class DiaryRoot(Tk):
             else:
                 self.input_passwd()
         else:
-            '''进入设置口令流程'''
+            """进入设置口令流程"""
             self.set_passwd()
 
             
     def input_passwd(self):
-        '''
+        """
         数据库已加密，进入输入口令流程
-        '''
+        """
         self.crypto_DB('input')
             
             
     def set_passwd(self):
-        '''
+        """
         数据库未加密，进入设置口令流程
-        '''
+        """
         if messagebox.askyesno('ASK','是否设置口令？'):
             try:
                 self.crypto_DB('set')
@@ -128,9 +131,9 @@ class DiaryRoot(Tk):
 
 
     def crypto_DB(self,operation):
-        '''
+        """
         打开口令窗口
-        '''
+        """
         crypto_window = CryptoRoot()
         if operation == 'input':
             crypto_window.input_passwd()
@@ -145,9 +148,9 @@ class DiaryRoot(Tk):
 
         
     def root_window(self):
-        '''
+        """
         这里才是真正的init
-        '''
+        """
         self.title('Python Workdiary')
         self.protocol("WM_DELETE_WINDOW",self.quit)   # 如果在函数后面加上()，就会在初始化时直接执行
         
@@ -173,9 +176,9 @@ class DiaryRoot(Tk):
 
         
     def init_frame(self):
-        '''
+        """
         内容区
-        '''
+        """
         init_frame = LabelFrame(self.left_frame,text='内容区')
         init_frame.pack()
 
@@ -195,6 +198,7 @@ class DiaryRoot(Tk):
         # 重要性选择
         Label(init_frame,text='是否重要',relief=RIDGE,width=8).grid(row=2,column=0,padx=5,pady=5)
         self.signif = StringVar()
+        self.signif.set('否')
         Radiobutton(init_frame,text="是",variable=self.signif,value='是').grid(row=2,column=1,padx=5,pady=5)
         Radiobutton(init_frame,text="否",variable=self.signif,value='否').grid(row=2,column=2,padx=5,pady=5)
 
@@ -209,9 +213,9 @@ class DiaryRoot(Tk):
         
         
     def new_frame(self):
-        '''
+        """
         功能区
-        '''
+        """
         new_frame = LabelFrame(self.left_frame,text='功能区')
         new_frame.pack()
 
@@ -226,10 +230,10 @@ class DiaryRoot(Tk):
         
     
     def getdate(self):
-        '''
+        """
         获取在组件中选择的日期
         如果不选择日期就关闭，会出现AttributeError，所以捕获了
-        '''
+        """
         cd = CalendarDialog.CalendarDialog(self)
         result = cd.result
         try:
@@ -239,18 +243,18 @@ class DiaryRoot(Tk):
     
     
     def input_detail(self):
-        '''
+        """
         获取弹窗中的详情内容
-        '''
+        """
         detail_window = DetailRoot(self.detail)
         self.wait_window(detail_window)
         self.detail = detail_window.detail
     
     
     def get_data(self):
-        '''
+        """
         获取用户输入数据
-        '''
+        """
         category = self.category.get()
         date = self.date.get()
         if date == '不选默认当天':
@@ -262,9 +266,9 @@ class DiaryRoot(Tk):
     
     
     def save_record(self):
-        '''
+        """
         保存记录
-        '''
+        """
         try:
             category,date,content,issignif,detail = self.get_data()
             
@@ -290,7 +294,7 @@ class DiaryRoot(Tk):
         
         
     def query_record(self):
-        '''查询记录'''
+        """查询记录"""
         try:
             category,date,content,issignif,detail = self.get_data()
             
@@ -301,7 +305,7 @@ class DiaryRoot(Tk):
             date_list = [date,]
 
             if category == '':
-                category_list = ['工作','生活','学习']
+                category_list = CATEGORY_LIST
             else:
                 category_list = [category,]
              
@@ -321,9 +325,9 @@ class DiaryRoot(Tk):
                     
                     
     def clear_all(self):
-        '''
+        """
         清空软件各输入框所有内容
-        '''
+        """
         try:
             self.category.set('')
             self.date.set('不选默认当天')
@@ -336,16 +340,16 @@ class DiaryRoot(Tk):
         
         
     def get_localtime(self):
-        '''
+        """
         获得当地时间
-        '''
+        """
         return datetime.datetime.now()
         
         
     def get_lastday(self):
-        '''
+        """
         计算今日和昨日日期并返回列表
-        '''
+        """
         localtime = self.get_localtime()
         lastday = localtime - datetime.timedelta(days=1)
         date_list = []
@@ -356,12 +360,12 @@ class DiaryRoot(Tk):
         return date_list
         
     def show_new_records(self):
-        '''
+        """
         显示最近两天所有的记录
-        '''
+        """
         try:
             date_list = self.get_lastday()
-            category_list = ["工作","生活","学习"]
+            category_list = CATEGORY_LIST
             content = '%%'
             issignif = '%%'
             detail = '%%'
@@ -375,9 +379,9 @@ class DiaryRoot(Tk):
         
         
     def clear_frame(self):
-        '''
+        """
         初始化区
-        '''
+        """
         # 初始化区框架
         clear_frame = LabelFrame(self.left_frame,text='初始化区，谨慎操作')
         clear_frame.pack()
@@ -396,9 +400,9 @@ class DiaryRoot(Tk):
 
         
     def clear_table(self,table):
-        '''
+        """
         清空所选表
-        '''
+        """
         if table == "":
             messagebox.showwarning("WARNING","请选择要清空的表")
         else:
@@ -412,13 +416,13 @@ class DiaryRoot(Tk):
         
         
     def init_sql(self):
-        '''
+        """
         重建并初始化数据库
-        '''
+        """
         if messagebox.askokcancel("初始化","初始化会删除所有记录!\n确定要初始化数据库吗？"):
             try:
                 self.record.disconnect()
-                os.unlink(self.plain_DB)
+                os.unlink(self.plain_DB) # 删除原有数据库
                 self.record = main.Record(self.plain_DB)
                 self.record.init_sql()
                 log_info("执行【数据库初始化】命令！")
@@ -428,9 +432,9 @@ class DiaryRoot(Tk):
 
         
     def quit(self):
-        '''
+        """
         关闭程序
-        '''
+        """
         if self.user_chose_enc == 0:
             self.destroy()
         else:
@@ -439,12 +443,12 @@ class DiaryRoot(Tk):
         
         
     def encrypt_DB(self):
-        '''
+        """
         加密明文库
         新的密文库会直接覆盖原来的
         删除明文库
         最后关闭程序窗口
-        '''
+        """
         self.record.disconnect()
 
         try:
@@ -466,9 +470,9 @@ class DiaryRoot(Tk):
         
         
     def query_results(self,frame_text,category_list,date_list,content,issignif,detail,state=NORMAL):
-        '''
+        """
         执行查询记录的方法
-        '''
+        """
         results = [('ID','分类','日期','内容','是否重要','详情'),]
         for category in category_list:
             for date in date_list:
@@ -480,9 +484,9 @@ class DiaryRoot(Tk):
         
         
     def result_frame(self,results,frame_text,modify_button_state):
-        '''
+        """
         查询结果显示区域
-        '''
+        """
         result_frame = LabelFrame(self.right_frame,text=frame_text)
         result_frame.grid(row=0,column=0,sticky=N+S)
         self.right_frame.rowconfigure(0,weight=1)
@@ -524,9 +528,9 @@ class DiaryRoot(Tk):
 
     
     def get_detail(self,event):
-        '''
+        """
         建立一个已排版的detail
-        '''
+        """
         row = int(self.text.index(event.widget)[0]) - 1
         
         self.detail = '分类：' + self.results[row][1] + \
@@ -534,13 +538,13 @@ class DiaryRoot(Tk):
                         '\n重要否：'+self.results[row][4] + \
                         '\n主题：'+self.results[row][3] + \
                         '\n详情：\n'+self.results[row][5]
-        detail_root = DetailRoot(self.detail,state=DISABLED)
+        DetailRoot(self.detail,state=DISABLED)
 
 
     def modify_record(self,event):
-        '''
+        """
         在新弹窗中修改记录
-        '''
+        """
         row = int(self.text.index(event.widget)[0]) - 1
         modify_root = ModifyRoot(self.results[row])
         self.wait_window(modify_root)
@@ -548,13 +552,13 @@ class DiaryRoot(Tk):
             self.show_new_records()
             
             
-    def export_to_excel(self):
-        '''
+    def export_to_excel(self,event):
+        """
         导出excel到当前文件夹
-        '''
+        """
         try:
-            excel = export.ToExcel(self.results,self.export_title)
-            log_info('导出excel。\n导出内容为：%s\n文件路径：%s\n' % (self.export_title,excel.filepath))
+            excel = export.ToExcel(self.results)
+            log_info('导出excel。\n文件路径：%s\n' % (excel.filepath))
             if messagebox.askyesno("导出成功","文件名如下：\n%s\n是否打开?" % excel.filename):
                 filepath = os.path.abspath(excel.filepath)
                 os.system(filepath)
@@ -564,9 +568,9 @@ class DiaryRoot(Tk):
     
     
     def delete_record(self,event):
-        '''
+        """
         删除所选记录
-        '''
+        """
         row = int(self.text.index(event.widget)[0]) - 1
 
         id = self.results[row][0]
@@ -586,9 +590,9 @@ class DiaryRoot(Tk):
     
     
     def author_frame(self):
-        '''
+        """
         联系我区域
-        '''
+        """
         author_frame = Frame(self.left_frame)
         author_frame.pack(expand=True,fill=BOTH)
         Label(author_frame,text='联系我：10010').pack(fill=BOTH)
@@ -596,9 +600,9 @@ class DiaryRoot(Tk):
 
 
 class DetailRoot(Toplevel):
-    '''
+    """
     详情窗口
-    '''
+    """
     def __init__(self,detail,state=NORMAL):
         super().__init__()
         self.detail = detail        # 把主窗口的detail赋值给此页面
@@ -609,7 +613,7 @@ class DetailRoot(Toplevel):
 
         
     def input_detail(self):
-        '''输入详细内容'''
+        """输入详细内容"""
         detailbar = Scrollbar(self,takefocus=False)
         detailbar.grid(row=0,column=1,sticky=N+S)
         self.text = Text(self,height=10,width=80,yscrollcommand=detailbar.set,relief=SUNKEN,wrap=WORD)
@@ -622,28 +626,28 @@ class DetailRoot(Toplevel):
 
 
     def get_detail(self):
-        '''
+        """
         将text中的内容赋值给detail，然后销毁窗口
         -1的作用是去掉最后的换行符
-        '''
+        """
         self.detail = self.text.get(1.0,END)[:-1]
         self.destroy()
 
             
     def clear_detail(self):
-        '''
+        """
         若detail直接赋值给text.delete，detail会是None
         选择：删除text后，赋值空字符串给detail
-        '''
+        """
         self.text.delete(1.0,END)
         self.detail = ''
         
         
         
 class ModifyRoot(Toplevel):
-    '''
+    """
     考虑修改分类的清空
-    '''
+    """
     def __init__(self,results):
         super().__init__()
         self.title('修改记录页')
@@ -697,7 +701,7 @@ class ModifyRoot(Toplevel):
 
 
     def getdate(self):
-        '''选取日期'''
+        """选取日期"""
         cd = CalendarDialog.CalendarDialog(self)
         result = cd.result
         try:
@@ -707,14 +711,14 @@ class ModifyRoot(Toplevel):
 
 
     def input_detail(self):
-        '''获取弹窗中的详情内容'''
+        """获取弹窗中的详情内容"""
         detail_window = DetailRoot(self.detail)
         self.wait_window(detail_window)
         self.detail = detail_window.detail
         
 
     def get_data(self):
-        '''获取用户输入数据'''
+        """获取用户输入数据"""
         category = self.category.get()
         date = self.date.get()
         content = self.content.get()
@@ -724,7 +728,7 @@ class ModifyRoot(Toplevel):
     
     
     def modify_record(self):
-        '''保存记录'''
+        """保存记录"""
         try:
             category,date,content,issignif,detail = self.get_data()
             modify_category = 0
@@ -751,10 +755,10 @@ class ModifyRoot(Toplevel):
         
         
 class CryptoRoot(Toplevel):
-    '''
+    """
     加密窗口
     程序运行时出现的第一个窗口
-    '''
+    """
     def __init__(self):
         super().__init__()
         self.title('口令页')
@@ -774,7 +778,7 @@ class CryptoRoot(Toplevel):
         
             
     def input_passwd(self):
-        '''输入口令的frame，用于解密'''
+        """输入口令的frame，用于解密"""
         Label(self,text='输入口令',width=12).grid(row=0,column=0,padx=5,pady=5)
         self.pass1 = StringVar()
         Entry(self,textvariable=self.pass1,width=15,show='*').grid(row=0,column=1,padx=5,pady=5)
@@ -784,11 +788,11 @@ class CryptoRoot(Toplevel):
 
         
     def set_passwd(self):
-        '''
+        """
         设置口令
         口令的hash值会保存到一个文本中
         以后输入口令会和这个hash比较，不同就不会进入下一步
-        '''
+        """
         Label(self,text='输入口令',width=12).grid(row=0,column=0,padx=5,pady=5)
         self.pass2 = StringVar()
         Entry(self,textvariable=self.pass2,width=15,show='*').grid(row=0,column=1,padx=5,pady=5)
@@ -802,10 +806,10 @@ class CryptoRoot(Toplevel):
         
         
     def check_passwd(self):
-        '''
+        """
         检查口令是否正确
         计算输入口令的hash，和口令文件中保存的hash比较
-        '''
+        """
         final_password = hashlib.sha256(self.pass1.get().encode('utf-8')).hexdigest()[:32]
         user_hash = hashlib.sha256(final_password.encode('utf-8')).hexdigest()
         saved_hash = open(self.passwd_file,'r').read()
@@ -821,13 +825,13 @@ class CryptoRoot(Toplevel):
         
         
     def check_dbfile(self):
-        '''
+        """
         判断当前文件夹中密文库和明文库的存在
         密文有明文无，正常解密连接
         密文无明文无，提示后关闭
         密文有明文有，用户选择
         密文无明文有，用户选择连明文或关闭
-        '''
+        """
         if os.path.exists(self.encrypted_DB) and not os.path.exists(self.plain_DB):
             try:
                 self.decryption()
@@ -859,9 +863,9 @@ class CryptoRoot(Toplevel):
                 
                 
     def decryption(self):
-        '''
+        """
         解密数据库
-        '''
+        """
         myaes.aesMode(self.encrypted_DB,self.temp_plain,'解密',self.password)
         data = open(self.temp_plain,'rb').read()
         if hashlib.sha256(data[64:]).hexdigest() != data[:64].decode('utf-8'):
@@ -879,11 +883,11 @@ class CryptoRoot(Toplevel):
         
         
     def gene_pass_file(self):
-        '''
+        """
         设置口令后生成口令文件
         先检查两次口令是否相同且不是空的
         然后计算hash值写到文件里
-        '''
+        """
         try:
             if self.verify_passwd():
                 self.check_password = 1
@@ -900,9 +904,9 @@ class CryptoRoot(Toplevel):
             
             
     def verify_passwd(self):
-        '''
+        """
         设置口令时的验证
-        '''
+        """
         if self.pass2.get().strip() != '':
             if self.pass2.get() == self.pass3.get():
                 self.user_password = self.pass2.get()
