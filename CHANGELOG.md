@@ -6,11 +6,18 @@
 - 设置口令时的字符串检查
 - 可修改口令
 - 按年查询记录
-- 增加分类
 - 待办事项模块，可在全部待办和当天待办切换显示
 ### Changed
 - 确认稳定后，关闭程序时直接删除明文库
 - 删除记录后直接刷新当前查询
+
+## [1.1.5] - 2019-09-02
+### Added
+- 增加分类
+- 修改分类名
+### Changed
+- 修改“清空表”为“清空分类”
+- 分类名只支持字母、数字以及它们的组合
 
 ## [1.1.3] - 2019-08-27
 ### Changed
@@ -95,7 +102,9 @@
 ## 0.1.1 - 2018-03-21
 - 初始版本
 
-[Unreleased]: https://github.com/WolfWW/python-work-diary/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/WolfWW/python-work-diary/compare/v1.1.5...HEAD
+[1.1.5]: https://github.com/WolfWW/python-work-diary/compare/v1.1.3...v1.1.5
+[1.1.3]: https://github.com/WolfWW/python-work-diary/compare/v1.1.1...v1.1.3
 [1.1.1]: https://github.com/WolfWW/python-work-diary/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/WolfWW/python-work-diary/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/WolfWW/python-work-diary/compare/v0.7.2...v1.0.0

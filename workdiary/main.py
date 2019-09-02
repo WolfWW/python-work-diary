@@ -17,34 +17,22 @@ TABLE_NAME = "diary"
 
 def mylogging():
     pass
+
 '''
-def scrub(table_name):
+def scrub(raw_catgry):
     """
-    处理输入字符串，主要用于自定义表名部分
+    处理输入字符串，主要用于自定义分类名部分
     from https://stackoverflow.com/questions/3247183/variable-table-name-in-sqlite
     """
-    return ''.join( chr for chr in table_name if chr.isalnum() )
+    return ''.join( chr for chr in raw_catgry if chr.isalnum() )
 '''
+
 class Record(object):
     def __init__(self,database):
         """实例初始化，创建实例时需要传入此函数中的参数"""
         self.database = database
         self.con = sqlite3.connect(self.database)
         self.cur = self.con.cursor()
-
-
-    '''
-    def new_table(self,table_name):
-        """以自定义表名新建表"""
-        table_name = scrub(table_name)
-        self.cur.execute("create table %s(id integer primary key autoincrement, category char(10), date char(19), content char(100), issignificant char(10), detail char(1000))" % table_name)
-
-    def modify_tablename(self,new_name):
-        """修改表名"""
-        new_name = scrub(new_name)
-        self.cur.execute("alter table TABLE_NAME rename to %s" % new_name)
-    '''
-
 
 
     def new_record(self,category,date,content,signif,detail):
@@ -79,13 +67,21 @@ class Record(object):
         """删除记录"""
         self.cur.execute("delete from TABLE_NAME where id=?",(id,))
 
-    '''待修改
-    def clear_table(self,category):
+
+    def clear_category(self,category):
         """清空某个分类"""
-        self.cur.execute('delete from TABLE_NAME')
+        self.cur.execute('delete from TABLE_NAME where category = ?',(category,))
         self.con.commit()
 
-    '''
+
+
+    def modify_catgryname(self,new_name,old_name):
+        """修改分类名称"""
+        #new_name = scrub(new_name)
+        #self.cur.execute("update TABLE_NAME set category=? where id=?",(category,id))
+        self.cur.execute("update TABLE_NAME set category=? where category=?",(new_name,old_name))
+        self.con.commit()
+
 
     def init_sql(self):
         """重建数据库"""

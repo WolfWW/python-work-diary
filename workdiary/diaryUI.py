@@ -13,6 +13,8 @@
 7.软件运行日志记录
 8.[x]可以进行用户设置，包括开机自启、字体等
 
+FIX:
+1.读取分类时怎么判断最后有没有回车
 目前功能请参考README
 """
 
@@ -49,8 +51,17 @@ ERROR_FILE = "./error.log"
 INFO_LEVEL = logging.DEBUG
 ERROR_LEVEL = logging.ERROR 
 
-# 默认分类
-CATEGORY_LIST = ["工作","生活","学习"]
+# 获取分类
+CATEGORY_FILE = './category.ini'
+def get_category(file):
+    cats = open(file,'r',encoding='utf-8').readlines()[1:]
+    temp_cats = []
+    for cat in cats:
+        if cat[-1] == '\n':
+            cat = cat[:-1]
+        temp_cats.append(cat)
+    return temp_cats
+
 
 logger = logging.getLogger(__name__)
 logger.setLevel(INFO_LEVEL)
@@ -73,11 +84,27 @@ def log_info(msg):
 def log_error(msg):
     logger.error(msg,stack_info=True,exc_info=True)
 
+def restart():
+    """
+    重启
+    在修改分类后使用，暂时没找到别的刷新办法
+    """
+    APP = DiaryRoot()
+    APP.mainloop()
+
+
+def scrub(raw_catgry):
+    """
+    处理输入字符串，主要用于自定义分类名部分
+    from https://stackoverflow.com/questions/3247183/variable-table-name-in-sqlite
+    """
+    return ''.join( chr for chr in raw_catgry if chr.isalnum() )
 
 
 class DiaryRoot(Tk):
     def __init__(self):
         super().__init__()
+        self.categories = get_category(CATEGORY_FILE)
         self.passwd_file = './check.pass'
         self.plain_DB = './workdiary.db'
         self.encrypted_DB = './diary.enc'
@@ -85,6 +112,7 @@ class DiaryRoot(Tk):
         self.user_chose_enc = 1                             # 用户对加密的选择，1表示要加密，0表示不加密
         self.check_enc_state()
 
+        
     
     def check_enc_state(self):
         """
@@ -185,8 +213,9 @@ class DiaryRoot(Tk):
         # 分类选择
         Label(init_frame,text='分类',relief=RIDGE,width=8).grid(row=0,column=0,padx=5,pady=5)
         self.category = StringVar()
-        self.category.set('工作')
-        ttk.Combobox(init_frame,textvariable=self.category,values=['工作','生活','学习'],width=4,state='readonly').grid(row=0,column=1,padx=5,pady=5,sticky=W+E)
+        self.category.set('')
+        ttk.Combobox(init_frame,textvariable=self.category,values=self.categories,width=4,state='readonly').grid(row=0,column=1,padx=5,pady=5,sticky=W+E)
+        Button(init_frame, text="分类编辑", command=self.edit_catgry).grid(row=0, column=2,sticky=W+E)
 
         # 日期录入
         Label(init_frame,text='日期',relief=RIDGE,width=8).grid(row=1,column=0,padx=5,pady=5)  
@@ -240,8 +269,17 @@ class DiaryRoot(Tk):
             self.date.set(result.strftime("%Y-%m-%d"))
         except:
             result = ''
-    
-    
+
+    def edit_catgry(self):
+        """
+        编辑分类
+        """
+        catgry_window = CatgryRoot()
+        self.wait_window(catgry_window)
+        if catgry_window.modified:
+            self.destroy()
+            restart()
+
     def input_detail(self):
         """
         获取弹窗中的详情内容
@@ -271,6 +309,7 @@ class DiaryRoot(Tk):
         """
         try:
             category,date,content,issignif,detail = self.get_data()
+            #category = category[:-1]
             
             if date == '':
                 date = str(self.get_localtime())[:10]
@@ -297,6 +336,7 @@ class DiaryRoot(Tk):
         """查询记录"""
         try:
             category,date,content,issignif,detail = self.get_data()
+            #category = category[:-1]
             
             date = '%' + date + '%'
             content = '%' + content + '%'
@@ -305,7 +345,7 @@ class DiaryRoot(Tk):
             date_list = [date,]
 
             if category == '':
-                category_list = CATEGORY_LIST
+                category_list = self.categories
             else:
                 category_list = [category,]
              
@@ -365,7 +405,7 @@ class DiaryRoot(Tk):
         """
         try:
             date_list = self.get_lastday()
-            category_list = CATEGORY_LIST
+            category_list = self.categories
             content = '%%'
             issignif = '%%'
             detail = '%%'
@@ -386,11 +426,11 @@ class DiaryRoot(Tk):
         clear_frame = LabelFrame(self.left_frame,text='初始化区，谨慎操作')
         clear_frame.pack()
 
-        # 清空表数据按钮
-        self.clr_table = StringVar()
-        ttk.Combobox(clear_frame,textvariable=self.clr_table,values=['工作','生活','学习'],width=8,state='readonly').grid(row=0,column=1,padx=5,pady=5,sticky=W)
+        # 清空分类按钮
+        self.clr_catgry = StringVar()
+        ttk.Combobox(clear_frame,textvariable=self.clr_catgry,values=self.categories,width=8,state='readonly').grid(row=0,column=1,padx=5,pady=5,sticky=W)
 
-        Button(clear_frame,text='清空所选表',command=lambda:self.clear_table(self.clr_table.get()),width=13).grid(row=0,column=0,padx=5,pady=5)
+        Button(clear_frame,text='清空所选分类',command=lambda:self.clear_category(self.clr_catgry.get()),width=13).grid(row=0,column=0,padx=5,pady=5)
 
         # 初始化数据库按钮
         Button(clear_frame,text='初始化数据库',command=self.init_sql,width=13).grid(row=1,column=0,padx=5,pady=5)
@@ -399,19 +439,19 @@ class DiaryRoot(Tk):
         Button(clear_frame,text='退出程序',command=self.quit,width=13).grid(row=1,column=1,padx=5,pady=5)
 
         
-    def clear_table(self,table):
+    def clear_category(self,category):
         """
-        清空所选表
+        清空所选分类
         """
-        if table == "":
-            messagebox.showwarning("WARNING","请选择要清空的表")
+        if category == "":
+            messagebox.showwarning("WARNING","请选择要清空的分类")
         else:
-            if messagebox.askokcancel("清空表","确定要清空%s表吗？"%table):
+            if messagebox.askokcancel("清空分类","确定要清空【%s】分类吗？"%category):
                 try:
-                    self.record.clear_table(table)
-                    log_info("【清空-%s】表！" % table)
+                    self.record.clear_category(category)
+                    log_info("【清空-%s】分类！" % category)
                 except Exception:
-                    log_error("【清空-%s】出现错误！" % table)
+                    log_error("【清空-%s】出现错误！" % category)
                     messagebox.showerror("ERROR","发生错误")
         
         
@@ -596,7 +636,121 @@ class DiaryRoot(Tk):
         author_frame = Frame(self.left_frame)
         author_frame.pack(expand=True,fill=BOTH)
         Label(author_frame,text='联系我：10010').pack(fill=BOTH)
-      
+
+
+class CatgryRoot(Toplevel):
+    """
+    修改分类及增加分类
+    """
+    def __init__(self):
+        super().__init__()
+        self.title('修改分类')
+        self.resizable(False, False)
+        self.database = './workdiary.db'
+        self.record = main.Record(self.database)
+        self.modified = 0
+        self.categories = get_category(CATEGORY_FILE)
+        self.frame()
+
+    def frame(self):
+        init_frame = Frame(self)
+        init_frame.grid(row=0, column=0)
+
+        # 分类选择
+        Label(init_frame,text='分类',relief=RIDGE,width=8).grid(row=0,column=0,padx=5,pady=5)
+        self.category = StringVar()
+        self.category.set('')
+        ttk.Combobox(init_frame,textvariable=self.category,values=self.categories,width=8,state='readonly').grid(row=0,column=1,padx=5,pady=5,sticky=W+E)
+        Button(init_frame, text="修改名称", command=self.modify_catgry).grid(row=0, column=2,padx=5,pady=5)
+        Button(init_frame, text="增加分类", command=self.add_catgry).grid(row=0, column=3,padx=5,pady=5)
+
+        # 新分类名称录入
+        self.content = StringVar()
+        self.content.set('')
+        Entry(init_frame, textvariable=self.content, width=16, bd=3).grid(row=0, column=4,padx=5,pady=5)
+
+        # 确定按钮的frame
+        ok_frame = Frame(self)
+        ok_frame.grid(row=1, column=0)
+
+        # 保存修改后的记录
+        Button(ok_frame, text='确定', command=self.quit, width=20).grid(row=0, column=0, padx=10)
+
+
+    def modify_catgry(self):
+        """
+        修改分类名称，在category_list修改，同时把数据库里的分类名改掉
+        """
+        new_catgry = scrub(self.content.get())
+        old_catgry = self.category.get()
+        if new_catgry == "" or old_catgry == '':
+            messagebox.showwarning("WARNING","请选择原分类并输入新分类名称")
+        else:
+            if messagebox.askokcancel("修改分类","确定要修改【%s】为【%s】吗？" % (old_catgry,new_catgry)):
+                try:
+                    # 要打开文件，修改对应分类，并到数据库修改
+                    f = open(CATEGORY_FILE,'r+',encoding='utf-8')
+                    self.categories = ''
+                    for line in f.readlines():
+                        self.categories += line
+                    f.close()
+                    f = open(CATEGORY_FILE, 'w', encoding='utf-8')
+                    f.write(self.categories.replace(old_catgry,new_catgry))
+                    f.close()
+                    self.record.modify_catgryname(new_catgry,old_catgry)
+                    log_info("修改分类【%s】为【%s】！" % (old_catgry,new_catgry))
+                    self.modified = 1
+                except Exception:
+                    log_error("【增加-%s】出现错误！" % new_catgry)
+                    messagebox.showerror("ERROR","发生错误")
+
+
+    def add_catgry(self):
+        """
+        增加分类名称，在category_list增加即可
+        """
+        new_catgry = scrub(self.content.get())
+        if new_catgry == "":
+            messagebox.showwarning("WARNING","请输入要增加的分类名称")
+        else:
+            if messagebox.askokcancel("增加分类","确定要增加【%s】分类吗？" % new_catgry):
+                try:
+                    #new_catgry = '\n' + new_catgry
+                    f = open(CATEGORY_FILE,'a+',encoding='utf-8')
+                    f.write(new_catgry + '\n')
+                    f.close()
+                    log_info("增加【%s】分类！" % new_catgry)
+                    self.modified = 1
+                except Exception:
+                    log_error("增加【%s】出现错误！" % new_catgry)
+                    messagebox.showerror("ERROR","发生错误")
+
+
+    def modify_record(self):
+        """保存记录"""
+        try:
+            category, date, content, issignif, detail = self.get_data()
+            modify_category = 0
+            old_category = self.results[1]
+            new_category = category
+            if old_category != new_category:
+                modify_category = 1
+
+            self.record.modify_record(self.results[0], old_category, new_category, date, content, issignif, detail,
+                                      modify_category)
+            log_info("【修改记录】成功！\n\
+            原纪录：%s\n\
+            新记录：%s" % \
+                     (self.results[1:-1], (new_category, date, content, issignif)))
+        except Exception:
+            log_error("【修改记录】出现错误！")
+            messagebox.showerror("ERROR", "发生错误")
+        self.modified = 1
+        self.quit()
+
+    def quit(self):
+        self.destroy()
+
 
 
 class DetailRoot(Toplevel):
@@ -667,7 +821,7 @@ class ModifyRoot(Toplevel):
         # 分类选择
         self.category = StringVar()
         self.category.set(self.results[1])
-        ttk.Combobox(init_frame,textvariable=self.category,values=['工作','生活','学习'],width=4,state='readonly').grid(row=0,column=0,padx=5,pady=5)
+        ttk.Combobox(init_frame,textvariable=self.category,values=self.categories,width=4,state='readonly').grid(row=0,column=0,padx=5,pady=5)
 
         # 日期录入  
         self.date = StringVar()
