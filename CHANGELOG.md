@@ -11,6 +11,10 @@
 - 确认稳定后，关闭程序时直接删除明文库
 - 删除记录后直接刷新当前查询
 
+## [1.1.6] - 2019-09-23
+### Fixed
+- 删除记录时报错
+
 ## [1.1.5] - 2019-09-02
 ### Added
 - 增加分类
@@ -102,7 +106,8 @@
 ## 0.1.1 - 2018-03-21
 - 初始版本
 
-[Unreleased]: https://github.com/WolfWW/python-work-diary/compare/v1.1.5...HEAD
+[Unreleased]: https://github.com/WolfWW/python-work-diary/compare/v1.1.6...HEAD
+[1.1.6]: https://github.com/WolfWW/python-work-diary/compare/v1.1.5...v1.1.6
 [1.1.5]: https://github.com/WolfWW/python-work-diary/compare/v1.1.3...v1.1.5
 [1.1.3]: https://github.com/WolfWW/python-work-diary/compare/v1.1.1...v1.1.3
 [1.1.1]: https://github.com/WolfWW/python-work-diary/compare/v1.1.0...v1.1.1

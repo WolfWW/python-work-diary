@@ -4,7 +4,7 @@
 """
 工作记录小软件UI，距离起初吹下的牛B还有很长一段距离
 计划功能如下（TODO）：
-1.[x]记录时有多种预设分类，并可自定义分类，如工作、学习、娱乐等
+1.记录时有多种预设分类，并可自定义分类，如工作、学习、娱乐等
 2.本地数据库记录，可通过日期、分类、关键字查询
 3.可导出为excel
 4.[x]待办事项，默认为全部列出，可设提醒时间
@@ -13,8 +13,6 @@
 7.软件运行日志记录
 8.[x]可以进行用户设置，包括开机自启、字体等
 
-FIX:
-1.读取分类时怎么判断最后有没有回车
 目前功能请参考README
 """
 
@@ -618,7 +616,7 @@ class DiaryRoot(Tk):
         content = self.results[row][3]
         if messagebox.askyesno("删除记录","确认删除所选记录？"):
             try:
-                self.record.del_record(id,category)
+                self.record.del_record(id,)
                 log_info("成功在【%s】删除一条记录，主题'%s'\n" % (category,content))
                 messagebox.showinfo("INFO","删除成功！\n请重新查询记录")
             except Exception:
